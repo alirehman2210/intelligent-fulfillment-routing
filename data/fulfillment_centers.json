@@ -1,0 +1,53 @@
+{
+  "_about": {
+    "what_this_file_is_for": "This is the list of warehouses the fulfillment network can ship orders from, and how much stock each one is holding right now.",
+    "role_in_the_prototype": "This is the first gate the engine checks. Before it worries about price or speed, it asks a simple question about every warehouse: does this place have enough stock to fill the whole order? Any warehouse that cannot is thrown out straight away and never considered again.",
+    "what_it_reads": "Nothing. This is a plain data file. Nobody reads anything to build it, and the numbers in it are made up by hand.",
+    "what_it_returns_or_prints": "Nothing. It does not run. router.py opens this file and reads the warehouse list out of it.",
+    "things_to_know": [
+      "SKU just means one specific product, a bit like a barcode. This prototype only has two: SKU-A and SKU-B.",
+      "SKU-A is the normal product. There are 39 units of it spread across the four warehouses.",
+      "SKU-B is the rare product. There are only 4 units of it in the whole company. That shortage is on purpose, because it is how we create fights between orders over the last remaining unit.",
+      "Shipping prices and delivery times are NOT in this file. They live in shipping_routes.json instead. That is because the cost depends on where the package is going, not just where it starts. Dallas to Los Angeles is a completely different price from Dallas to New York.",
+      "A stock level of 0 here means we do not stock that product at that warehouse at all. This prototype cannot tell the difference between 'we never keep it here' and 'we normally do but we have run out today'. A real system would need to know the difference."
+    ]
+  },
+  "fulfillment_centers": [
+    {
+      "fc_id": "FC-LOS-ANGELES",
+      "location": "Los Angeles, CA",
+      "inventory": {
+        "SKU-A": 20,
+        "SKU-B": 2
+      },
+      "note": "Holds the most stock of anywhere. It also holds 2 of the only 4 rare units in the company, which makes it the single warehouse able to fill an order for 2 rare units on its own. Order ORD-1006 needs exactly that, and filling it empties this warehouse of the rare item, which then causes the shortages further down the order list."
+    },
+    {
+      "fc_id": "FC-DALLAS",
+      "location": "Dallas, TX",
+      "inventory": {
+        "SKU-A": 5,
+        "SKU-B": 1
+      },
+      "note": "SKU-A is set to exactly 5 on purpose. The worked example in the spec shows stock dropping from 5 to 4 after one unit ships, so this number has to be 5 for that example to come out right. Dallas is the steady middle option in this network: never the cheapest and never the fastest, but on time often enough to win a lot of orders."
+    },
+    {
+      "fc_id": "FC-CHICAGO",
+      "location": "Chicago, IL",
+      "inventory": {
+        "SKU-A": 2,
+        "SKU-B": 1
+      },
+      "note": "Deliberately kept almost empty, with only 2 units of SKU-A. That thin shelf is the whole reason the 50 cent rule exists: on order ORD-1002 Chicago is the cheapest option AND arrives on time, and the engine still turns it down, because taking it would leave Chicago on its last single unit to save 40 cents. Worth knowing what actually happens in the sample batch: Chicago never ships a single unit of SKU-A. It gets turned down for ORD-1002 and it is beaten on price everywhere else, so it ends the batch with the same 2 units it started with. Its one genuine job is its single rare unit, which orders ORD-1007 and ORD-1008 both need and only one of them can have."
+    },
+    {
+      "fc_id": "FC-PENNSYLVANIA",
+      "location": "Philadelphia, PA",
+      "inventory": {
+        "SKU-A": 12,
+        "SKU-B": 0
+      },
+      "note": "Plenty of the normal product and none of the rare one. This warehouse plays two opposite roles depending on where the parcel is going, and both are useful. Shipping to the west coast it is the cheapest option by a mile at $5.00 and also the slowest at 4 days, so it is the tempting cheap choice the engine has to keep turning down. That tension is the reason this whole engine exists. Shipping to the east coast it is the cheapest AND the fastest, so it simply wins with no argument, which proves the engine is not just avoiding cheap warehouses out of habit. It is not the cheapest everywhere, though: for the middle of the country it costs $7.00 and both Chicago and Dallas beat it. It is well stocked because it needs to keep showing up as a real option in every comparison."
+    }
+  ]
+}

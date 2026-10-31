@@ -1,0 +1,106 @@
+{
+  "_about": {
+    "what_this_file_is_for": "This is a made-up batch of ten customer orders for the engine to work through. Each order says what was bought, how many, where it is going, when it was ordered, and most importantly what delivery date the shopper was promised.",
+    "role_in_the_prototype": "This is the input the whole engine runs on. The promised delivery date is the number that matters most, because protecting that promise is the main goal the engine is built around. Every order in here was designed to force a different situation, so that running the batch proves the engine handles all of them rather than just the easy ones.",
+    "what_it_reads": "Nothing. This is a plain data file and all ten orders were invented by hand.",
+    "what_it_returns_or_prints": "Nothing. It does not run. router.py opens this file and routes each order in it one at a time.",
+    "things_to_know": [
+      "SKU just means one specific product, a bit like a barcode. SKU-A is the normal product with plenty in stock. SKU-B is the rare one with only 4 units in the entire company.",
+      "Every order was placed on Friday 14 August 2026, so every package leaves the warehouse on Monday 17 August. That is on purpose. If orders arrived on different days their packing dates would all differ, and you would not be able to tell whether an interesting decision was caused by the delivery promise or just by the order being placed later. Same posting day means only one thing varies between orders: how much time we promised the customer.",
+      "Not every order can be filled. Three of them are supposed to fail, and failing cleanly with a clear reason is a feature, not a bug.",
+      "The really important pair is ORD-1007 and ORD-1008. Read both notes together, because on their own neither makes sense."
+    ]
+  },
+  "orders": [
+    {
+      "order_id": "ORD-1001",
+      "destination": "Los Angeles, CA",
+      "sku": "SKU-A",
+      "quantity": 1,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-20",
+      "note": "The main example from the spec, and the order the README is built around. Three warehouses can get this there by the 20th: Dallas at $8.00 and Chicago at $8.80 both land exactly on the promised day, and Los Angeles at $10.00 lands a day early. Pennsylvania is far cheaper at $5.00 but arrives a day late. Dallas should win because it is the cheapest option that still keeps the promise. The engine should then admit that this decision cost $3.00 more than the cheapest option on the table."
+    },
+    {
+      "order_id": "ORD-1002",
+      "destination": "Denver, CO",
+      "sku": "SKU-A",
+      "quantity": 1,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-19",
+      "note": "Tests the rule about not draining the last of your stock. Chicago costs $4.80 and arrives on time. Dallas costs $5.20 and also arrives on time. So Chicago looks like the obvious winner. But Chicago is the thinner shelf: filling this order would drop Chicago to 1 unit, while Dallas would still have 3 left. The gap is 40 cents, which is inside the 50 cent 'near enough the same price' window, so the engine should spend the extra 40 cents on Dallas and leave Chicago's last units alone. Saving 40 cents is not worth burning your final stock. Note the exact stock numbers depend on what ran before this order, because ORD-1001 also ships from Dallas, so this note talks about which shelf is thinner rather than pinning down exact counts."
+    },
+    {
+      "order_id": "ORD-1003",
+      "destination": "Boston, MA",
+      "sku": "SKU-A",
+      "quantity": 2,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-21",
+      "note": "A deliberately boring order with no dilemma at all. Pennsylvania is both the cheapest at $4.50 and the fastest at 1 day, so it simply wins. The extra money spent should come out at exactly $0.00. This matters more than it sounds: it proves the engine only reaches for pricier options when there is a real conflict. An engine that always grabbed the fast expensive option would look identical on the harder orders and be quietly wrong."
+    },
+    {
+      "order_id": "ORD-1004",
+      "destination": "Seattle, WA",
+      "sku": "SKU-A",
+      "quantity": 1,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-18",
+      "note": "A promise that was impossible before we even saw the order. The fastest west coast option is Los Angeles at 2 days, which lands on the 19th, but somebody at the checkout told this shopper the 18th. No routing decision can fix that. The engine should still route it properly, pick the least late option, and clearly mark it as late rather than rejecting it. A hard order is still a real order that needs shipping."
+    },
+    {
+      "order_id": "ORD-1005",
+      "destination": "Phoenix, AZ",
+      "sku": "SKU-A",
+      "quantity": 25,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-21",
+      "note": "An order too big for any single warehouse. We own 39 units of this product, so we genuinely have enough, but they are spread out and the largest single warehouse holds only 20. We could split it and send two boxes from two places, but that means two labels, two lots of warehouse work and more cost, and the spec puts splitting out of scope. So the engine should spot the problem and say plainly that a split would be needed, rather than quietly doing something silly. The quantity 25 was chosen because it stays too big for one warehouse even after the other nine orders have eaten into stock, so this order behaves identically in every run instead of flickering between outcomes."
+    },
+    {
+      "order_id": "ORD-1006",
+      "destination": "San Francisco, CA",
+      "sku": "SKU-B",
+      "quantity": 2,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-20",
+      "note": "An order with exactly one possible answer. It needs 2 units of the rare product, and Los Angeles is the only warehouse holding 2. Everywhere else has 1 or none, so there is nothing to choose between. Its real job is to empty Los Angeles of the rare product, which is what causes the shortages further down this list."
+    },
+    {
+      "order_id": "ORD-1007",
+      "destination": "Chicago, IL",
+      "sku": "SKU-B",
+      "quantity": 1,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-20",
+      "note": "The relaxed twin of ORD-1008, and the order that causes the damage. It needs 1 rare unit and was promised the 20th, which is loose enough that Chicago, Dallas and Los Angeles all work. If the engine handles this order first it will take Chicago's last rare unit, and that decision looks perfectly sensible on its own. The problem only appears afterwards, when ORD-1008 arrives and finds Chicago empty. One detail here is worth reading carefully, because it shows a limit of the 50 cent stock rule. Chicago at $4.80 and Dallas at $5.20 are only 40 cents apart, so they are inside the 'near enough the same price' window, which normally means the engine picks whichever leaves more stock behind. But both of them hold exactly 1 rare unit, so both would drop to zero, and the stock rule has nothing to separate them. Chicago wins on being cheaper and faster instead. So the stock rule cannot save ORD-1008 here. The only thing that can is deciding to handle ORD-1008 first, which is exactly the point this pair of orders exists to make."
+    },
+    {
+      "order_id": "ORD-1008",
+      "destination": "Minneapolis, MN",
+      "sku": "SKU-B",
+      "quantity": 1,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-18",
+      "note": "The desperate twin of ORD-1007, and the one that gets hurt. It also needs 1 rare unit, but it was promised the 18th, and Chicago at 1 day is the only warehouse fast enough to make that. Dallas would arrive the 19th, a day late. So this order has exactly one option in the world, while ORD-1007 has three. Handle this one first and both promises are kept, because ORD-1007 can absorb being pushed to slower Dallas and still make the 20th. Handle ORD-1007 first and this order is late. Same two orders, same stock, same rules, and one promise saved purely by choosing what to do first. This pair is the entire argument for sorting orders by how little spare time they have."
+    },
+    {
+      "order_id": "ORD-1009",
+      "destination": "Atlanta, GA",
+      "sku": "SKU-B",
+      "quantity": 1,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-21",
+      "note": "Sold out everywhere. All 4 rare units in the company get used up by orders 1006, 1007 and 1008 before the engine reaches this one, so there is nothing left anywhere to ship. The engine should report that we are out of stock across the whole network. Note the difference from ORD-1005: that one failed because the stock was in too many places at once, this one fails because the stock simply is not there."
+    },
+    {
+      "order_id": "ORD-1010",
+      "destination": "Miami, FL",
+      "sku": "SKU-A",
+      "quantity": 1,
+      "order_date": "2026-08-14",
+      "promised_delivery_date": "2026-08-21",
+      "note": "Bad input rather than a hard order. Miami is not one of the 12 cities we know about, so we have no idea which shipping area it belongs to, which means we cannot look up a price or a delivery time for it. The engine should refuse the order and say why, instead of guessing that Miami is probably east-ish. Guessing would mean inventing a delivery time and then promising a date built on a made-up number. This order also proves one bad row does not crash the whole batch."
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "_about": {
+    "what_this_file_is_for": "This file answers two questions. First, which part of the country is a city in? Second, how much does it cost and how long does it take to ship from a given warehouse to a given part of the country?",
+    "role_in_the_prototype": "This is where the engine gets the two numbers it makes its whole decision from: the price and the delivery time. Once the engine knows a warehouse has stock, it looks up that warehouse's route to the customer here, works out what day the package would land, and checks whether that beats the date we promised the shopper.",
+    "what_it_reads": "Nothing. This is a plain data file and every number in it was chosen by hand.",
+    "what_it_returns_or_prints": "Nothing. It does not run. router.py opens this file, uses destination_zones to turn a city into an area, then uses lanes to look up the price and delivery time.",
+    "things_to_know": [
+      "We split the country into three areas instead of pricing every city separately. Writing a price for every city in America would be thousands of numbers and would not teach us anything. Four warehouses times three areas is just 12 numbers.",
+      "A lane is one warehouse shipping to one area. There is exactly one lane for each pairing, so 12 lanes in total.",
+      "Prices are stored in whole cents, so 800 means $8.00. This is on purpose. Computers make small rounding errors with decimal numbers, and this engine compares prices that are sometimes only 30 or 40 cents apart, so a rounding error could genuinely flip a decision. Whole numbers cannot drift.",
+      "Delivery times are in working days, Monday to Friday. Weekends are skipped because warehouses and delivery vans mostly do not run then. Public holidays are ignored, which is a shortcut.",
+      "If a city is not in the destination_zones list below, the engine refuses the order instead of guessing which area it belongs to. Guessing would mean inventing a delivery time and promising a date we cannot back up."
+    ],
+    "two_things_that_look_like_mistakes_but_are_not": [
+      "Los Angeles is the MOST expensive warehouse for west coast orders, even though it is sitting right there. That looks backwards. The reason is that shipping price is not only about distance. It also depends on the deal each warehouse has struck with its couriers and which service level it uses, so here Los Angeles is the pay-more-get-it-there-fast option. There is also a practical reason: if the nearest warehouse were always both the cheapest AND the fastest, the engine would never face a real choice, and there would be nothing to demonstrate.",
+      "Atlanta is filed under EAST, which is a stretch, because it is a long way from Philadelphia. With only three areas some cities land in a bucket that does not fit them well. A real system would use proper distance or postcode bands instead of three big buckets."
+    ]
+  },
+
+  "destination_zones": {
+    "Los Angeles, CA": "WEST",
+    "San Francisco, CA": "WEST",
+    "Seattle, WA": "WEST",
+    "Phoenix, AZ": "WEST",
+
+    "Chicago, IL": "CENTRAL",
+    "Dallas, TX": "CENTRAL",
+    "Denver, CO": "CENTRAL",
+    "Minneapolis, MN": "CENTRAL",
+
+    "New York, NY": "EAST",
+    "Boston, MA": "EAST",
+    "Atlanta, GA": "EAST",
+    "Philadelphia, PA": "EAST"
+  },
+
+  "lanes": [
+    {
+      "fc_id": "FC-LOS-ANGELES",
+      "destination_zone": "WEST",
+      "shipping_cost_cents": 1000,
+      "transit_days": 2,
+      "note": "The fastest way to reach the west coast, and the priciest. This is the tempting option that gets the package there early. Arriving early earns us nothing though, because we only ever promised a specific date, so the engine should refuse to pay for it unless the extra speed is actually needed."
+    },
+    {
+      "fc_id": "FC-DALLAS",
+      "destination_zone": "WEST",
+      "shipping_cost_cents": 800,
+      "transit_days": 3,
+      "note": "The compromise that wins the main example. Not cheap, not fast, but it lands exactly on the promised day. These three west coast numbers were taken straight from the worked example in the spec so that example comes out identical."
+    },
+    {
+      "fc_id": "FC-CHICAGO",
+      "destination_zone": "WEST",
+      "shipping_cost_cents": 880,
+      "transit_days": 3,
+      "note": "Arrives on the same day as Dallas but costs 80 cents more. That gap is deliberate. 80 cents is more than the 50 cent 'basically the same price' window, so Dallas beats it on price alone and stock levels never get considered. Without this gap the main example would get muddled."
+    },
+    {
+      "fc_id": "FC-PENNSYLVANIA",
+      "destination_zone": "WEST",
+      "shipping_cost_cents": 500,
+      "transit_days": 4,
+      "note": "The cheapest option to the west coast by a mile, and also the slowest. This is the choice the engine keeps having to turn down, and the reason it can honestly say 'protecting your promise cost you $3'."
+    },
+
+    {
+      "fc_id": "FC-CHICAGO",
+      "destination_zone": "CENTRAL",
+      "shipping_cost_cents": 480,
+      "transit_days": 1,
+      "note": "The cheapest AND fastest way to reach the middle of the country, so normally an easy winner. The catch is that Chicago is nearly out of stock. This is the lane that sets up the most interesting decision in the whole prototype."
+    },
+    {
+      "fc_id": "FC-DALLAS",
+      "destination_zone": "CENTRAL",
+      "shipping_cost_cents": 520,
+      "transit_days": 2,
+      "note": "Only 40 cents more than Chicago, which is inside the 50 cent window, so the engine treats these two as effectively the same price and picks on remaining stock instead. Dallas has more left, so it wins and Chicago's last units get protected. This 40 cent gap is the single most carefully chosen number in the file."
+    },
+    {
+      "fc_id": "FC-PENNSYLVANIA",
+      "destination_zone": "CENTRAL",
+      "shipping_cost_cents": 700,
+      "transit_days": 3,
+      "note": "Too slow and too expensive to win in the middle of the country. It exists as a backup for when the closer warehouses have run out of stock."
+    },
+    {
+      "fc_id": "FC-LOS-ANGELES",
+      "destination_zone": "CENTRAL",
+      "shipping_cost_cents": 950,
+      "transit_days": 3,
+      "note": "Rarely the right answer, but it matters when the rare product has run out everywhere else, because Los Angeles is the warehouse holding most of it."
+    },
+
+    {
+      "fc_id": "FC-PENNSYLVANIA",
+      "destination_zone": "EAST",
+      "shipping_cost_cents": 450,
+      "transit_days": 1,
+      "note": "The cheapest and fastest lane in the entire file. East coast orders are meant to be easy, and this lane just wins outright with no argument. That is useful to show on purpose: it proves the engine only spends extra money when there is a genuine conflict, instead of always reaching for the fast expensive option."
+    },
+    {
+      "fc_id": "FC-CHICAGO",
+      "destination_zone": "EAST",
+      "shipping_cost_cents": 620,
+      "transit_days": 2,
+      "note": "A solid second choice for the east coast. Comes into play once Pennsylvania runs out of stock."
+    },
+    {
+      "fc_id": "FC-DALLAS",
+      "destination_zone": "EAST",
+      "shipping_cost_cents": 900,
+      "transit_days": 3,
+      "note": "Shipping across most of the country, so slower and dearer. A fallback option."
+    },
+    {
+      "fc_id": "FC-LOS-ANGELES",
+      "destination_zone": "EAST",
+      "shipping_cost_cents": 1150,
+      "transit_days": 4,
+      "note": "The worst lane in the file: coast to coast, slowest and most expensive. It should almost never be chosen, and if the engine ever picks it that is a sign every closer warehouse was empty."
+    }
+  ]
+}

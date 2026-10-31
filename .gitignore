@@ -1,0 +1,14 @@
+# Python bytecode, regenerated on every run
+__pycache__/
+*.pyc
+
+# macOS folder metadata
+.DS_Store
+
+# Local Claude Code tool permissions, specific to this machine
+.claude/
+
+# Private reference material. The original assignment document is kept outside
+# this folder on purpose; this line is a safety net so a stray copy can never be
+# committed by accident.
+*.pdf
