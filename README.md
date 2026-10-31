@@ -10,25 +10,6 @@ It also records why it picked that warehouse and why it rejected the others. Eve
 
 The data is synthetic. The routing logic is real, and you can run it.
 
-## Results at a Glance
-
-I ran the same 10 synthetic orders three times, changing one rule each time. One order is invalid input and gets rejected, so 9 are actually routed.
-
-| Strategy | Promises kept | Shipping cost |
-| --- | ---: | ---: |
-| Promise first, most urgent orders first | 6 of 9 | $47.70 |
-| Promise first, in the order they arrived | 5 of 9 | $47.70 |
-| Cost first, most urgent orders first | 5 of 9 | $39.30 |
-
-64 automated tests pass.
-
-Two findings:
-
-1. **Handling the most time-sensitive orders first kept one extra delivery promise and cost nothing.** Identical $47.70 bill, one more customer served on time.
-2. **Putting delivery promises ahead of the cheapest option cost $8.40 more** in this batch. That money went to three different things: protecting one promise, reducing how late an already-late order would be, and avoiding emptying a warehouse shelf.
-
-All of this runs on synthetic data I designed to create routing conflicts. It does not represent production performance.
-
 ## The Problem
 
 Say you sell a product and you keep stock in four warehouses. An order comes in from Los Angeles. Four warehouses could fill it, and they all give you a different answer.
